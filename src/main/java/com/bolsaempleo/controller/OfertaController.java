@@ -1,8 +1,10 @@
 package com.bolsaempleo.controller;
 
 import com.bolsaempleo.model.Oferta;
+import com.bolsaempleo.model.Postulacion;
 import com.bolsaempleo.model.TipoUsuario;
 import com.bolsaempleo.repository.OfertaRepository;
+import com.bolsaempleo.repository.PostulacionRepository;
 import com.bolsaempleo.repository.UsuarioRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,9 @@ public class OfertaController {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private PostulacionRepository postulacionRepository;
 
     // Obtener todas las ofertas
     @GetMapping
@@ -116,12 +121,16 @@ public class OfertaController {
                         .body(Map.of("success", false, "message", "No puedes eliminar una oferta que no es tuya"));
             }
 
+            // ✅ Eliminar postulaciones asociadas antes de eliminar la oferta
+            List<Postulacion> postulaciones = postulacionRepository.findByOferta(oferta);
+            postulacionRepository.deleteAll(postulaciones);
+
             ofertaRepository.delete(oferta);
             return ResponseEntity.ok(Map.of("success", true, "message", "Oferta eliminada correctamente"));
         }).orElse(ResponseEntity.status(404).body(Map.of("success", false, "message", "La oferta no existe")));
     }
 
-    // ✅ NUEVO: Obtener todas las ofertas creadas por una empresa
+    // Obtener todas las ofertas creadas por una empresa
     @GetMapping("/empresa/{empresaId}")
     public ResponseEntity<?> listarOfertasPorEmpresa(@PathVariable Long empresaId) {
         var usuarioOpt = usuarioRepository.findById(empresaId);

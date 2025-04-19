@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/postulaciones")
@@ -59,7 +60,6 @@ public class PostulacionController {
         return ResponseEntity.ok(postulacionRepository.save(nueva));
     }
 
-
     // 2. Listar todas las postulaciones (opcional)
     @GetMapping
     public List<Postulacion> listarTodas() {
@@ -81,12 +81,12 @@ public class PostulacionController {
                 .filter(p -> p.getOferta().getId().equals(id))
                 .toList();
     }
-    
+
     @GetMapping("/candidato/email/{email}")
     public List<Postulacion> porEmailCandidato(@PathVariable String email) {
         return postulacionRepository.findByCandidatoEmail(email);
     }
-    
+
     @GetMapping("/usuario/{usuarioId}")
     public ResponseEntity<?> obtenerPostulacionesUsuario(@PathVariable Long usuarioId) {
         var usuarioOpt = usuarioRepository.findById(usuarioId);
@@ -98,11 +98,9 @@ public class PostulacionController {
         var usuario = usuarioOpt.get();
 
         if (usuario.getTipo() == TipoUsuario.CANDIDATO) {
-            // Devuelve solo las postulaciones hechas por el candidato
             List<Postulacion> postulaciones = postulacionRepository.findByCandidato(usuario);
             return ResponseEntity.ok(postulaciones);
         } else if (usuario.getTipo() == TipoUsuario.EMPRESA) {
-            // Devuelve todas las postulaciones a ofertas publicadas por esta empresa
             List<Postulacion> postulaciones = postulacionRepository.findAll().stream()
                 .filter(p -> p.getOferta().getEmpresa().equals(usuario.getNombre()))
                 .toList();
@@ -112,4 +110,24 @@ public class PostulacionController {
         }
     }
 
+    // ✅ PATCH para actualizar estado de postulación
+    @PatchMapping("/{id}/estado")
+    public ResponseEntity<?> actualizarEstadoPostulacion(
+            @PathVariable Long id,
+            @RequestParam("estado") String estado) {
+
+        Optional<Postulacion> optional = postulacionRepository.findById(id);
+        if (optional.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("success", false, "message", "Postulación no encontrada"));
+        }
+
+        Postulacion postulacion = optional.get();
+        try {
+            postulacion.setEstado(Enum.valueOf(Postulacion.EstadoPostulacion.class, estado.toUpperCase()));
+            postulacionRepository.save(postulacion);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Estado actualizado"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Estado inválido"));
+        }
+    }
 }
