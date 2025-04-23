@@ -43,7 +43,8 @@ public class RegistroCandidatoRequest {
     private String habilidades;
     private String fechaInicioMes;
     private String fechaInicioAnio;
-    private String fechaFin;
+    private String fechaFinMes;
+    private String fechaFinAnio;
 
     // ---------- ESTUDIOS ----------
     private String tieneEstudios;
@@ -116,8 +117,11 @@ public class RegistroCandidatoRequest {
     public String getFechaInicioAnio() { return fechaInicioAnio; }
     public void setFechaInicioAnio(String fechaInicioAnio) { this.fechaInicioAnio = fechaInicioAnio; }
 
-    public String getFechaFin() { return fechaFin; }
-    public void setFechaFin(String fechaFin) { this.fechaFin = fechaFin; }
+    public String getFechaFinMes() { return fechaFinMes; }
+    public void setFechaFinMes(String fechaFinMes) { this.fechaFinMes = fechaFinMes; }
+
+    public String getFechaFinAnio() { return fechaFinAnio; }
+    public void setFechaFinAnio(String fechaFinAnio) { this.fechaFinAnio = fechaFinAnio; }
 
     public String getTieneEstudios() { return tieneEstudios; }
     public void setTieneEstudios(String tieneEstudios) { this.tieneEstudios = tieneEstudios; }
@@ -145,4 +149,4 @@ public class RegistroCandidatoRequest {
 
     public String getTipo() { return tipo; }
     public void setTipo(String tipo) { this.tipo = tipo; }
-} 
+}

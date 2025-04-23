@@ -34,7 +34,6 @@ public class Usuario {
     @Column(nullable = false)
     private String contraseña;
 
-    private String cvFilename;
     private String telefono;
     private String identificacionFiscal;
 
@@ -88,9 +87,6 @@ public class Usuario {
 
     public String getContraseña() { return contraseña; }
     public void setContraseña(String contraseña) { this.contraseña = contraseña; }
-
-    public String getCvFilename() { return cvFilename; }
-    public void setCvFilename(String cvFilename) { this.cvFilename = cvFilename; }
 
     public String getTelefono() { return telefono; }
     public void setTelefono(String telefono) { this.telefono = telefono; }

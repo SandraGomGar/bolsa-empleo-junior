@@ -11,16 +11,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 @RestController
 @RequestMapping("/auth")
 @CrossOrigin(origins = "*")
 public class AuthController {
-
-    private static final String UPLOAD_DIR = "uploads/";
 
     @Autowired
     private UsuarioRepository usuarioRepository;
@@ -41,7 +37,6 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "El email ya está registrado"));
         }
 
- 
         Usuario candidato = new Usuario();
         candidato.setNombre(request.getNombre() + " " + request.getApellido());
         candidato.setEmail(request.getEmail());
@@ -65,7 +60,8 @@ public class AuthController {
             experiencia.setPuesto(request.getPuesto());
             experiencia.setFechaInicioMes(request.getFechaInicioMes());
             experiencia.setFechaInicioAnio(request.getFechaInicioAnio());
-            experiencia.setFechaFin(request.getFechaFin());
+            String fechaFin = request.getFechaFinMes() + "/" + request.getFechaFinAnio();
+            experiencia.setFechaFin(fechaFin);
             experiencia.setDescripcion(request.getDescripcionExperiencia());
             experiencia.setHabilidades(request.getHabilidades());
             experiencia.setCandidato(nuevoCandidato);
@@ -123,5 +119,30 @@ public class AuthController {
         candidato.getEstudios().size();
 
         return ResponseEntity.ok(Map.of("success", true, "perfil", candidato));
+    }
+
+    // ✅ ACTUALIZAR PERFIL EMPRESA
+    @PutMapping("/empresa/{id}")
+    public ResponseEntity<?> actualizarPerfilEmpresa(@PathVariable Long id, @RequestBody Map<String, String> datos) {
+        Optional<Usuario> empresaOpt = usuarioRepository.findById(id);
+
+        if (empresaOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("success", false, "message", "Empresa no encontrada"));
+        }
+
+        Usuario empresa = empresaOpt.get();
+
+        if (!empresa.getTipo().equals(TipoUsuario.EMPRESA)) {
+            return ResponseEntity.status(403).body(Map.of("success", false, "message", "No tienes permisos para editar este perfil"));
+        }
+
+        empresa.setNombre(datos.get("nombre"));
+        empresa.setTelefono(datos.get("telefono"));
+        empresa.setIdentificacionFiscal(datos.get("identificacionFiscal"));
+        empresa.setDescripcion(datos.get("descripcion"));
+
+        usuarioRepository.save(empresa);
+
+        return ResponseEntity.ok(Map.of("success", true, "usuario", empresa));
     }
 }
