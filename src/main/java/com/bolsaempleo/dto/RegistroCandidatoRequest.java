@@ -1,7 +1,6 @@
 package com.bolsaempleo.dto;
 
 import jakarta.validation.constraints.*;
-import org.springframework.web.multipart.MultipartFile;
 
 public class RegistroCandidatoRequest {
 
@@ -31,23 +30,36 @@ public class RegistroCandidatoRequest {
     @NotBlank(message = "Debes indicar si vives en España")
     private String viveEnEspaña;
 
-    // Se validarán en el controlador según viveEnEspaña
     private String codigoPostal;
     private String provincia;
     private String poblacion;
-    private String pais; // en caso de que viva fuera de España
+    private String pais;
 
+    // ---------- EXPERIENCIA ----------
     private String tieneExperiencia;
-    private String experiencia;
+    private String empresa;
+    private String puesto;
+    private String descripcionExperiencia;
+    private String habilidades;
+    private String fechaInicioMes;
+    private String fechaInicioAnio;
+    private String fechaFinMes;
+    private String fechaFinAnio;
 
+    // ---------- ESTUDIOS ----------
     private String tieneEstudios;
-    private String estudios;
-
-    private MultipartFile cv;
+    private String estudiosNivel;
+    private String estudiosCentro;
+    private String estudiosFechaInicioMes;
+    private String estudiosFechaInicioAnio;
+    private String estudiosFechaFinMes;
+    private String estudiosFechaFinAnio;
+    private boolean estudiosCursandoActualmente;
 
     private String tipo;
 
-    // Getters y Setters (sin cambios respecto a los que ya tenías)
+    // ---------- GETTERS Y SETTERS ----------
+
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
 
@@ -87,17 +99,53 @@ public class RegistroCandidatoRequest {
     public String getTieneExperiencia() { return tieneExperiencia; }
     public void setTieneExperiencia(String tieneExperiencia) { this.tieneExperiencia = tieneExperiencia; }
 
-    public String getExperiencia() { return experiencia; }
-    public void setExperiencia(String experiencia) { this.experiencia = experiencia; }
+    public String getEmpresa() { return empresa; }
+    public void setEmpresa(String empresa) { this.empresa = empresa; }
+
+    public String getPuesto() { return puesto; }
+    public void setPuesto(String puesto) { this.puesto = puesto; }
+
+    public String getDescripcionExperiencia() { return descripcionExperiencia; }
+    public void setDescripcionExperiencia(String descripcionExperiencia) { this.descripcionExperiencia = descripcionExperiencia; }
+
+    public String getHabilidades() { return habilidades; }
+    public void setHabilidades(String habilidades) { this.habilidades = habilidades; }
+
+    public String getFechaInicioMes() { return fechaInicioMes; }
+    public void setFechaInicioMes(String fechaInicioMes) { this.fechaInicioMes = fechaInicioMes; }
+
+    public String getFechaInicioAnio() { return fechaInicioAnio; }
+    public void setFechaInicioAnio(String fechaInicioAnio) { this.fechaInicioAnio = fechaInicioAnio; }
+
+    public String getFechaFinMes() { return fechaFinMes; }
+    public void setFechaFinMes(String fechaFinMes) { this.fechaFinMes = fechaFinMes; }
+
+    public String getFechaFinAnio() { return fechaFinAnio; }
+    public void setFechaFinAnio(String fechaFinAnio) { this.fechaFinAnio = fechaFinAnio; }
 
     public String getTieneEstudios() { return tieneEstudios; }
     public void setTieneEstudios(String tieneEstudios) { this.tieneEstudios = tieneEstudios; }
 
-    public String getEstudios() { return estudios; }
-    public void setEstudios(String estudios) { this.estudios = estudios; }
+    public String getEstudiosNivel() { return estudiosNivel; }
+    public void setEstudiosNivel(String estudiosNivel) { this.estudiosNivel = estudiosNivel; }
 
-    public MultipartFile getCv() { return cv; }
-    public void setCv(MultipartFile cv) { this.cv = cv; }
+    public String getEstudiosCentro() { return estudiosCentro; }
+    public void setEstudiosCentro(String estudiosCentro) { this.estudiosCentro = estudiosCentro; }
+
+    public String getEstudiosFechaInicioMes() { return estudiosFechaInicioMes; }
+    public void setEstudiosFechaInicioMes(String estudiosFechaInicioMes) { this.estudiosFechaInicioMes = estudiosFechaInicioMes; }
+
+    public String getEstudiosFechaInicioAnio() { return estudiosFechaInicioAnio; }
+    public void setEstudiosFechaInicioAnio(String estudiosFechaInicioAnio) { this.estudiosFechaInicioAnio = estudiosFechaInicioAnio; }
+
+    public String getEstudiosFechaFinMes() { return estudiosFechaFinMes; }
+    public void setEstudiosFechaFinMes(String estudiosFechaFinMes) { this.estudiosFechaFinMes = estudiosFechaFinMes; }
+
+    public String getEstudiosFechaFinAnio() { return estudiosFechaFinAnio; }
+    public void setEstudiosFechaFinAnio(String estudiosFechaFinAnio) { this.estudiosFechaFinAnio = estudiosFechaFinAnio; }
+
+    public boolean isEstudiosCursandoActualmente() { return estudiosCursandoActualmente; }
+    public void setEstudiosCursandoActualmente(boolean estudiosCursandoActualmente) { this.estudiosCursandoActualmente = estudiosCursandoActualmente; }
 
     public String getTipo() { return tipo; }
     public void setTipo(String tipo) { this.tipo = tipo; }

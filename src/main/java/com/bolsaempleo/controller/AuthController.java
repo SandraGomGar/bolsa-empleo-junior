@@ -1,10 +1,8 @@
 package com.bolsaempleo.controller;
 
 import com.bolsaempleo.dto.RegistroCandidatoRequest;
-import com.bolsaempleo.dto.RegistroEmpresaRequest;
-import com.bolsaempleo.model.TipoUsuario;
-import com.bolsaempleo.model.Usuario;
-import com.bolsaempleo.repository.UsuarioRepository;
+import com.bolsaempleo.model.*;
+import com.bolsaempleo.repository.*;
 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,118 +10,86 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("/auth")
-
+@CrossOrigin(origins = "*")
 public class AuthController {
-
-    private static final String UPLOAD_DIR = "uploads/";
 
     @Autowired
     private UsuarioRepository usuarioRepository;
 
     @Autowired
+    private ExperienciaLaboralRepository experienciaLaboralRepository;
+
+    @Autowired
+    private EstudiosRepository estudiosRepository;
+
+    @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
-    @PostMapping("/registro")
-    public ResponseEntity<?> registrarUsuario(@RequestBody Usuario usuario) {
-        if (usuarioRepository.findByEmail(usuario.getEmail()) != null) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "El email ya está registrado"));
-        }
-
-        usuario.setContraseña(passwordEncoder.encode(usuario.getContraseña()));
-        Usuario nuevoUsuario = usuarioRepository.save(usuario);
-        return ResponseEntity.ok(Map.of("success", true, "usuario", nuevoUsuario));
-    }
-
+    // ✅ REGISTRO CANDIDATO
     @PostMapping("/registro-candidato")
-    public ResponseEntity<?> registrarCandidato(@Valid @ModelAttribute RegistroCandidatoRequest request, BindingResult result) {
-        // Validaciones manuales
-        if (request.getContraseña() == null || request.getContraseña().length() < 6) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "La contraseña debe tener al menos 6 caracteres"));
-        }
-
+    public ResponseEntity<?> registrarCandidato(@Valid @RequestBody RegistroCandidatoRequest request, BindingResult result) {
         if (usuarioRepository.findByEmail(request.getEmail()) != null) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "El email ya está registrado"));
         }
 
-        // Validar archivo
-        MultipartFile cvFile = request.getCv();
-        String cvFilename = null;
-        if (cvFile != null && !cvFile.isEmpty()) {
-            String fileType = cvFile.getContentType();
-            if (!fileType.equals("application/pdf") && !fileType.equals("application/msword")
-                    && !fileType.equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document")) {
-                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Formato de archivo no permitido. Solo PDF, DOC o DOCX"));
-            }
-
-            if (cvFile.getSize() > 5 * 1024 * 1024) {
-                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "El archivo no debe superar los 5MB"));
-            }
-
-            try {
-                String uniqueFilename = UUID.randomUUID() + "_" + cvFile.getOriginalFilename();
-                File uploadFolder = new File(UPLOAD_DIR);
-                if (!uploadFolder.exists()) uploadFolder.mkdirs();
-                File dest = new File(uploadFolder, uniqueFilename);
-                cvFile.transferTo(dest);
-                cvFilename = uniqueFilename;
-            } catch (IOException e) {
-                return ResponseEntity.status(500).body(Map.of("success", false, "message", "Error al guardar el archivo CV"));
-            }
-        }
-
-        // Crear el candidato
         Usuario candidato = new Usuario();
         candidato.setNombre(request.getNombre() + " " + request.getApellido());
         candidato.setEmail(request.getEmail());
         candidato.setContraseña(passwordEncoder.encode(request.getContraseña()));
         candidato.setTipo(TipoUsuario.CANDIDATO);
-        candidato.setCvFilename(cvFilename);
+        candidato.setTelefono(request.getTelefono());
+        candidato.setFechaNacimiento(request.getFechaNacimiento());
+        candidato.setGenero(request.getGenero());
+        candidato.setViveEnEspaña(request.getViveEnEspaña());
+        candidato.setCodigoPostal(request.getCodigoPostal());
+        candidato.setProvincia(request.getProvincia());
+        candidato.setPoblacion(request.getPoblacion());
+        candidato.setPais(request.getPais());
 
         Usuario nuevoCandidato = usuarioRepository.save(candidato);
+
+        // ✅ Guardar experiencia
+        if ("sí".equalsIgnoreCase(request.getTieneExperiencia()) && request.getEmpresa() != null) {
+            ExperienciaLaboral experiencia = new ExperienciaLaboral();
+            experiencia.setEmpresa(request.getEmpresa());
+            experiencia.setPuesto(request.getPuesto());
+            experiencia.setFechaInicioMes(request.getFechaInicioMes());
+            experiencia.setFechaInicioAnio(request.getFechaInicioAnio());
+            String fechaFin = request.getFechaFinMes() + "/" + request.getFechaFinAnio();
+            experiencia.setFechaFin(fechaFin);
+            experiencia.setDescripcion(request.getDescripcionExperiencia());
+            experiencia.setHabilidades(request.getHabilidades());
+            experiencia.setCandidato(nuevoCandidato);
+            experienciaLaboralRepository.save(experiencia);
+        }
+
+        // ✅ Guardar estudios
+        if ("sí".equalsIgnoreCase(request.getTieneEstudios()) && request.getEstudiosNivel() != null) {
+            Estudios estudios = new Estudios();
+            estudios.setNivel(request.getEstudiosNivel());
+            estudios.setCentro(request.getEstudiosCentro());
+            estudios.setFechaInicioMes(request.getEstudiosFechaInicioMes());
+            estudios.setFechaInicioAnio(request.getEstudiosFechaInicioAnio());
+            estudios.setFechaFinMes(request.getEstudiosFechaFinMes());
+            estudios.setFechaFinAnio(request.getEstudiosFechaFinAnio());
+            estudios.setCursandoActualmente(request.isEstudiosCursandoActualmente());
+            estudios.setCandidato(nuevoCandidato);
+            estudiosRepository.save(estudios);
+        }
+
         return ResponseEntity.ok(Map.of("success", true, "usuario", nuevoCandidato));
     }
 
-    @PostMapping("/registro-empresa")
-    public ResponseEntity<?> registrarEmpresa(@Valid @RequestBody RegistroEmpresaRequest request, BindingResult result) {
-        if (result.hasErrors()) {
-            List<String> errores = result.getFieldErrors().stream()
-                    .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                    .toList();
-            return ResponseEntity.badRequest().body(Map.of("success", false, "errors", errores));
-        }
-
-        if (usuarioRepository.findByEmail(request.getEmail()) != null) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "El email ya está registrado"));
-        }
-
-        Usuario empresa = new Usuario();
-        empresa.setNombre(request.getNombre());
-        empresa.setEmail(request.getEmail());
-        empresa.setContraseña(passwordEncoder.encode(request.getContraseña()));
-        empresa.setTipo(TipoUsuario.EMPRESA);
-
-        Usuario nuevaEmpresa = usuarioRepository.save(empresa);
-        return ResponseEntity.ok(Map.of("success", true, "usuario", nuevaEmpresa));
-    }
-
+    // ✅ LOGIN USUARIO
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> loginData) {
         String email = loginData.get("email");
         String contraseña = loginData.get("contraseña");
-
-        if (email == null || contraseña == null || email.isBlank() || contraseña.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Email y contraseña son obligatorios"));
-        }
 
         Usuario usuario = usuarioRepository.findByEmail(email);
         if (usuario == null || !passwordEncoder.matches(contraseña, usuario.getContraseña())) {
@@ -131,5 +97,52 @@ public class AuthController {
         }
 
         return ResponseEntity.ok(Map.of("success", true, "usuario", usuario));
+    }
+
+    // ✅ PERFIL CANDIDATO
+    @GetMapping("/candidato/perfil/{id}")
+    public ResponseEntity<?> obtenerPerfilCandidato(@PathVariable Long id) {
+        Optional<Usuario> candidatoOpt = usuarioRepository.findById(id);
+
+        if (candidatoOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("success", false, "message", "Candidato no encontrado"));
+        }
+
+        Usuario candidato = candidatoOpt.get();
+
+        if (candidato.getTipo() != TipoUsuario.CANDIDATO) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Este usuario no es un candidato"));
+        }
+
+        // Forzar carga de relaciones
+        candidato.getExperiencias().size();
+        candidato.getEstudios().size();
+
+        return ResponseEntity.ok(Map.of("success", true, "perfil", candidato));
+    }
+
+    // ✅ ACTUALIZAR PERFIL EMPRESA
+    @PutMapping("/empresa/{id}")
+    public ResponseEntity<?> actualizarPerfilEmpresa(@PathVariable Long id, @RequestBody Map<String, String> datos) {
+        Optional<Usuario> empresaOpt = usuarioRepository.findById(id);
+
+        if (empresaOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("success", false, "message", "Empresa no encontrada"));
+        }
+
+        Usuario empresa = empresaOpt.get();
+
+        if (!empresa.getTipo().equals(TipoUsuario.EMPRESA)) {
+            return ResponseEntity.status(403).body(Map.of("success", false, "message", "No tienes permisos para editar este perfil"));
+        }
+
+        empresa.setNombre(datos.get("nombre"));
+        empresa.setTelefono(datos.get("telefono"));
+        empresa.setIdentificacionFiscal(datos.get("identificacionFiscal"));
+        empresa.setDescripcion(datos.get("descripcion"));
+
+        usuarioRepository.save(empresa);
+
+        return ResponseEntity.ok(Map.of("success", true, "usuario", empresa));
     }
 }
